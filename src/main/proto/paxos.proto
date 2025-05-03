@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "rt4.paxos";
+option java_outer_classname = "PaxosServiceProto";
+
+// Interface du service Paxos côté serveur
+service PaxosService {
+  // Permet au client de demander une valeur aléatoire au serveur
+  rpc ProposeValue (ValueRequest) returns (ValueResponse);
+
+  // Permet au client d'envoyer la valeur de consensus à chaque serveur pour stockage
+  rpc StoreConsensusValue (ConsensusValue) returns (StoreAck);
+}
+
+// Message de requête envoyé au serveur (ici juste un identifiant)
+message ValueRequest {
+  string requester = 1;
+}
+
+// Réponse contenant la valeur aléatoire générée et l'identifiant du serveur
+message ValueResponse {
+  int32 proposed_value = 1;
+  string server_id = 2;
+}
+
+// Message contenant la valeur R choisie par consensus
+message ConsensusValue {
+  int32 value = 1;
+}
+
+// Accusé de réception pour confirmer le stockage de la valeur
+message StoreAck {
+  bool success = 1;
+}
