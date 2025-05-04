@@ -4,32 +4,90 @@ option java_multiple_files = true;
 option java_package = "rt4.paxos";
 option java_outer_classname = "PaxosServiceProto";
 
-// Interface du service Paxos côté serveur
+// Paxos Service Interface for three-phase consensus
 service PaxosService {
-  // Permet au client de demander une valeur aléatoire au serveur
-  rpc ProposeValue (ValueRequest) returns (ValueResponse);
+  // Phase 1: Leader Election
+  rpc ProposeLeader (LeaderProposal) returns (LeaderResponse);
 
-  // Permet au client d'envoyer la valeur de consensus à chaque serveur pour stockage
-  rpc StoreConsensusValue (ConsensusValue) returns (StoreAck);
+  // Phase 2a: Value Proposal (Bill)
+  rpc ProposeValue (ValueProposal) returns (ValueResponse);
+
+  // Phase 2b: ACK Collection
+  rpc AcknowledgeProposal (ProposalAck) returns (AckResponse);
+
+  // Phase 3: Value Commitment (Law)
+  rpc CommitValue (ConsensusValue) returns (CommitAck);
+
+  // For monitoring and visualization
+  rpc GetServerStatus (StatusRequest) returns (ServerStatus);
 }
 
-// Message de requête envoyé au serveur (ici juste un identifiant)
-message ValueRequest {
-  string requester = 1;
-}
-
-// Réponse contenant la valeur aléatoire générée et l'identifiant du serveur
-message ValueResponse {
-  int32 proposed_value = 1;
+// Leader Election Messages
+message LeaderProposal {
+  int32 proposal_number = 1;
   string server_id = 2;
 }
 
-// Message contenant la valeur R choisie par consensus
-message ConsensusValue {
-  int32 value = 1;
+message LeaderResponse {
+  bool accepted = 1;
+  int32 highest_seen = 2;
+  string acceptor_id = 3;
 }
 
-// Accusé de réception pour confirmer le stockage de la valeur
-message StoreAck {
+// Value Proposal Messages
+message ValueProposal {
+  int32 proposal_number = 1;
+  int32 proposed_value = 2;
+  string leader_id = 3;
+}
+
+message ValueResponse {
+  bool accepted = 1;
+  int32 proposal_number = 2;
+  string acceptor_id = 3;
+}
+
+// Acknowledgment Messages
+message ProposalAck {
+  int32 proposal_number = 1;
+  bool accepted = 2;
+  string acceptor_id = 3;
+}
+
+message AckResponse {
+  bool received = 1;
+}
+
+// Commitment Messages
+message ConsensusValue {
+  int32 proposal_number = 1;
+  int32 value = 2;
+  string leader_id = 3;
+}
+
+message CommitAck {
   bool success = 1;
+  string server_id = 2;
+}
+
+// Status Messages
+message StatusRequest {
+  string requester = 1;
+}
+
+message ServerStatus {
+  string server_id = 1;
+  int32 current_proposal = 2;
+  bool is_leader = 3;
+  int32 current_value = 4;
+  repeated LogEntry log_entries = 5;
+}
+
+// Log Entry
+message LogEntry {
+  string timestamp = 1;
+  string event_type = 2;
+  string description = 3;
+  int32 proposal_number = 4;
+  int32 value = 5;
 }

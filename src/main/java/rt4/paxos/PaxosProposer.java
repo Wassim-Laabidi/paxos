@@ -4,22 +4,81 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
+/**
+ * Optimized Paxos server with three phase protocol:
+ * 1. Election: Select a leader
+ * 2. Bill: Leader proposes values and collects ACKs
+ * 3. Law: Leader commits final value
+ */
 public class PaxosProposer {
-    public static int PORT;
+    private static final Logger logger = Logger.getLogger(PaxosProposer.class.getName());
 
+    public static int PORT;
+    private Server server;
+
+    /**
+     * Main method starts the gRPC server
+     */
     public static void main(String[] args) throws IOException, InterruptedException {
-        // Récupération du port passé en argument (ex: 50051, 50052, etc.)
+        // Get port from command line arguments
+        if (args.length < 1) {
+            System.err.println("Usage: PaxosProposer <port>");
+            System.exit(1);
+        }
+
+        // Parse port
         PORT = Integer.parseInt(args[0]);
 
-        // Lancement du serveur gRPC avec notre service Paxos
-        Server server = ServerBuilder.forPort(PORT)
-                .addService(new PaxosServiceImpl())
+        // Create and start server
+        final PaxosProposer proposer = new PaxosProposer();
+        proposer.start();
+        proposer.blockUntilShutdown();
+    }
+
+    /**
+     * Start the server with PaxosServiceImpl
+     */
+    private void start() throws IOException {
+        // Create service implementation
+        PaxosServiceImpl serviceImpl = new PaxosServiceImpl();
+
+        // Build and start server
+        server = ServerBuilder.forPort(PORT)
+                .addService(serviceImpl)
                 .build()
                 .start();
 
-        System.out.println("Server started on port " + PORT);
+        logger.info("Server started on port " + PORT);
 
-        server.awaitTermination(); // Attente infinie (le serveur reste actif)
+        // Add shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.err.println("Shutting down server due to JVM shutdown");
+            try {
+                PaxosProposer.this.stop();
+            } catch (InterruptedException e) {
+                e.printStackTrace(System.err);
+            }
+        }));
+    }
+
+    /**
+     * Stop the server
+     */
+    private void stop() throws InterruptedException {
+        if (server != null) {
+            server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * Keep main thread alive until server is terminated
+     */
+    private void blockUntilShutdown() throws InterruptedException {
+        if (server != null) {
+            server.awaitTermination();
+        }
     }
 }
