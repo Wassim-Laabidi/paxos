@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class PaxosVisualizer extends JFrame {
     // Constants
@@ -319,6 +321,20 @@ public class PaxosVisualizer extends JFrame {
         });
     }
 
+
+
+    private void stopProcess() {
+        running = false;
+        controller.stopPaxosProcess();
+        startButton.setEnabled(true);
+        stopButton.setEnabled(false);
+        statusLabel.setText("Status: Stopped");
+        addLogMessage("SYSTEM", "Paxos process stopped by user");
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
     private void startProcess() {
         resetNodes();
         logMessages.clear();
@@ -340,6 +356,20 @@ public class PaxosVisualizer extends JFrame {
             targetPorts = Arrays.asList("50051", "50052", "50053");
         } else {
             targetPorts = Arrays.asList("50051", "50052", "50053", "50054", "50055");
+
+            // Start additional server processes if 5-node mode is selected
+            try {
+                // Try to use reflection to call the startAdditionalServers method
+                Class<?> launcherClass = Class.forName("rt4.paxos.PaxosLauncher");
+                Method startMethod = launcherClass.getMethod("startAdditionalServers", int[].class);
+                startMethod.invoke(null, new Object[]{new int[]{50054, 50055}});
+
+                // Give servers some time to start
+                addLogMessage("SYSTEM", "Starting additional servers for 5-node mode");
+                Thread.sleep(2000);
+            } catch (Exception e) {
+                addLogMessage("WARNING", "Could not start additional servers: " + e.getMessage());
+            }
         }
 
         // Start Paxos process in background thread
@@ -348,21 +378,13 @@ public class PaxosVisualizer extends JFrame {
         }).start();
     }
 
-    private void stopProcess() {
-        running = false;
-        controller.stopPaxosProcess();
-        startButton.setEnabled(true);
-        stopButton.setEnabled(false);
-        statusLabel.setText("Status: Stopped");
-        addLogMessage("SYSTEM", "Paxos process stopped by user");
-    }
-
-    public boolean isRunning() {
-        return running;
+    // Expose ServerNode class through a getter
+    public ServerNode getNode(String id) {
+        return nodes.get(id);
     }
 
     // Inner classes
-    static class ServerNode {
+    public static class ServerNode {
         final String id;
         int x, y;
         boolean isLeader = false;
@@ -374,6 +396,14 @@ public class PaxosVisualizer extends JFrame {
             this.id = id;
             this.x = x;
             this.y = y;
+        }
+
+        public boolean isLeader() {
+            return isLeader;
+        }
+
+        public int getCurrentValue() {
+            return currentValue;
         }
     }
 

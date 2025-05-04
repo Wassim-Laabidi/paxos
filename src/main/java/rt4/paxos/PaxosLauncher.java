@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Main launcher for the Paxos system.
@@ -15,6 +16,7 @@ import java.util.concurrent.CountDownLatch;
 public class PaxosLauncher {
     private static final int[] DEFAULT_PORTS = {50051, 50052, 50053};
     private static List<Process> serverProcesses = new ArrayList<>();
+    private static boolean isShuttingDown = false;
 
     public static void main(String[] args) {
         // Set better look and feel
@@ -25,7 +27,7 @@ public class PaxosLauncher {
         }
 
         // Show splash screen while starting servers
-        showSplashScreen();
+        JFrame splashFrame = showSplashScreen();
 
         // Start server processes
         CountDownLatch serversStarted = new CountDownLatch(DEFAULT_PORTS.length);
@@ -33,12 +35,17 @@ public class PaxosLauncher {
             startServerProcess(port, serversStarted);
         }
 
-        // Wait for all servers to start
+        // Wait for all servers to start with a timeout
         try {
-            serversStarted.await();
+            if (!serversStarted.await(10, TimeUnit.SECONDS)) {
+                System.out.println("Warning: Not all servers started in time. Continuing anyway.");
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        // Close splash screen
+        splashFrame.dispose();
 
         // Launch the GUI
         SwingUtilities.invokeLater(() -> {
@@ -48,6 +55,7 @@ public class PaxosLauncher {
             // Add shutdown hook to clean up server processes
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("Shutting down Paxos servers...");
+                isShuttingDown = true;
                 stopAllServers();
             }));
         });
@@ -55,8 +63,9 @@ public class PaxosLauncher {
 
     /**
      * Shows a splash screen while servers are starting
+     * @return The splash frame for later disposal
      */
-    private static void showSplashScreen() {
+    private static JFrame showSplashScreen() {
         JFrame splashFrame = new JFrame("Starting Paxos...");
         splashFrame.setUndecorated(true);
         splashFrame.setSize(400, 200);
@@ -82,10 +91,7 @@ public class PaxosLauncher {
         splashFrame.add(panel);
         splashFrame.setVisible(true);
 
-        // Close splash after a delay
-        Timer timer = new Timer(3000, e -> splashFrame.dispose());
-        timer.setRepeats(false);
-        timer.start();
+        return splashFrame;
     }
 
     /**
@@ -123,6 +129,11 @@ public class PaxosLauncher {
                             serverStarted = true;
                             latch.countDown();
                         }
+
+                        // Break if we're shutting down
+                        if (isShuttingDown) {
+                            break;
+                        }
                     }
                 }
 
@@ -130,10 +141,31 @@ public class PaxosLauncher {
                 System.out.println("Server on port " + port + " has terminated.");
 
             } catch (IOException e) {
+                System.err.println("Error starting server on port " + port + ": " + e.getMessage());
                 e.printStackTrace();
                 latch.countDown(); // Ensure latch is decremented even on error
             }
         }).start();
+    }
+
+    /**
+     * Method to start additional servers for the 5-node mode
+     */
+    public static void startAdditionalServers(int[] additionalPorts) {
+        CountDownLatch additionalLatch = new CountDownLatch(additionalPorts.length);
+
+        for (int port : additionalPorts) {
+            startServerProcess(port, additionalLatch);
+        }
+
+        // Wait for additional servers to start
+        try {
+            if (!additionalLatch.await(5, TimeUnit.SECONDS)) {
+                System.out.println("Warning: Not all additional servers started in time");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -143,6 +175,15 @@ public class PaxosLauncher {
         for (Process process : serverProcesses) {
             if (process.isAlive()) {
                 process.destroy();
+                try {
+                    // Wait for process to terminate gracefully
+                    if (!process.waitFor(2, TimeUnit.SECONDS)) {
+                        // Force termination if it doesn't exit nicely
+                        process.destroyForcibly();
+                    }
+                } catch (InterruptedException e) {
+                    process.destroyForcibly();
+                }
             }
         }
 
