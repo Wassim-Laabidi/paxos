@@ -17,7 +17,7 @@ This project implements an optimized Paxos consensus algorithm with a graphical 
 
 ## System Requirements
 
-- Java 11 or higher
+- Java 22
 - Maven (for building)
 - Swing-compatible display for the GUI
 
@@ -34,7 +34,7 @@ This project implements an optimized Paxos consensus algorithm with a graphical 
 
 ## Building the Project
 
-1. Make sure you have Maven and Java 11+ installed
+1. Make sure you have Maven and Java 22 installed
 2. Build the project with Maven:
 
 ```bash
@@ -60,9 +60,11 @@ java -cp target/paxos-1.0-SNAPSHOT-jar-with-dependencies.jar rt4.paxos.PaxosLaun
 1. Start multiple server processes (at least 3):
 
 ```bash
-java -cp target/paxos-1.0-SNAPSHOT-jar-with-dependencies.jar rt4.paxos.PaxosProposer 50051
-java -cp target/paxos-1.0-SNAPSHOT-jar-with-dependencies.jar rt4.paxos.PaxosProposer 50052
-java -cp target/paxos-1.0-SNAPSHOT-jar-with-dependencies.jar rt4.paxos.PaxosProposer 50053
+java -cp target/paxos-1.0-SNAPSHOT.jar rt4.paxos.PaxosProposer 50051
+java -cp target/paxos-1.0-SNAPSHOT.jar rt4.paxos.PaxosProposer 50052
+java -cp target/paxos-1.0-SNAPSHOT.jar rt4.paxos.PaxosProposer 50053
+java -cp target/paxos-1.0-SNAPSHOT.jar rt4.paxos.PaxosProposer 50054
+java -cp target/paxos-1.0-SNAPSHOT.jar rt4.paxos.PaxosProposer 50055
 ```
 
 2. Start the visualization interface:
