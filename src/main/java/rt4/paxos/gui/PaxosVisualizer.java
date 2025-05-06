@@ -12,7 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class PaxosVisualizer extends JFrame {
-    // Constants
+
     private static final int WIDTH = 1000;
     private static final int HEIGHT = 700;
     private static final int NODE_RADIUS = 60;
@@ -60,7 +60,6 @@ public class PaxosVisualizer extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Top panel with controls
         JPanel controlPanel = new JPanel();
         controlPanel.setBackground(new Color(230, 230, 235));
         controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));

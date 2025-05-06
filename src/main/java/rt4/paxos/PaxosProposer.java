@@ -7,21 +7,14 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-/**
- * Optimized Paxos server with three phase protocol:
- * 1. Election: Select a leader
- * 2. Bill: Leader proposes values and collects ACKs
- * 3. Law: Leader commits final value
- */
+
 public class PaxosProposer {
     private static final Logger logger = Logger.getLogger(PaxosProposer.class.getName());
 
     public static int PORT;
     private Server server;
 
-    /**
-     * Main method starts the gRPC server
-     */
+     //start the gRPC server
     public static void main(String[] args) throws IOException, InterruptedException {
         // Get port from command line arguments
         if (args.length < 1) {
@@ -38,9 +31,8 @@ public class PaxosProposer {
         proposer.blockUntilShutdown();
     }
 
-    /**
-     * Start the server with PaxosServiceImpl
-     */
+     // Start the server with PaxosServiceImpl
+
     private void start() throws IOException {
         // Create service implementation
         PaxosServiceImpl serviceImpl = new PaxosServiceImpl();
@@ -64,18 +56,15 @@ public class PaxosProposer {
         }));
     }
 
-    /**
-     * Stop the server
-     */
+     // Stop the server
+
     private void stop() throws InterruptedException {
         if (server != null) {
             server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
         }
     }
 
-    /**
-     * Keep main thread alive until server is terminated
-     */
+
     private void blockUntilShutdown() throws InterruptedException {
         if (server != null) {
             server.awaitTermination();

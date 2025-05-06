@@ -82,9 +82,6 @@ public class PaxosController {
         }
     }
 
-    /**
-     * Verify which servers are actually available
-     */
     private void checkServerAvailability(List<String> targetPorts) {
         for (String port : targetPorts) {
             try {
@@ -94,11 +91,9 @@ public class PaxosController {
 
                 PaxosServiceGrpc.PaxosServiceBlockingStub stub = PaxosServiceGrpc.newBlockingStub(channel);
 
-                // Try with a short timeout
                 stub.withDeadlineAfter(1, TimeUnit.SECONDS)
                         .getServerStatus(StatusRequest.newBuilder().setRequester("gui").build());
 
-                // If we reach here, server is available
                 serverAvailability.put(port, true);
                 activeChannels.add(channel);
                 visualizer.addLogMessage("INFO", "Server on port " + port + " is available");
@@ -110,9 +105,8 @@ public class PaxosController {
         }
     }
 
-    /**
-     * Phase 1: Leader Election
-     */
+     //Phase 1: Leader Election
+
     private void runElectionPhase(List<String> targetPorts) throws InterruptedException {
         visualizer.setPhase("1 - Election");
         visualizer.addLogMessage("PHASE", "Starting ELECTION phase");
@@ -183,9 +177,8 @@ public class PaxosController {
         }
     }
 
-    /**
-     * Phase 2: Proposal (Bill)
-     */
+     // Phase 2: Proposal (Bill)
+
     private void runProposalPhase(List<String> targetPorts) throws InterruptedException {
         visualizer.setPhase("2 - Bill (Proposal)");
         visualizer.addLogMessage("PHASE", "Starting BILL phase (value proposal)");
@@ -207,7 +200,7 @@ public class PaxosController {
                     break;
                 }
             } catch (StatusRuntimeException e) {
-                // Skip this server
+
                 continue;
             }
         }
@@ -285,9 +278,9 @@ public class PaxosController {
         }
     }
 
-    /**
-     * Helper method to check if a node is currently marked as leader in the UI
-     */
+
+     // Helper method to check if a node is currently marked as leader in the UI
+
     private boolean isNodeLeader(String port) {
         try {
             Field nodesField = visualizer.getClass().getDeclaredField("nodes");
@@ -305,9 +298,9 @@ public class PaxosController {
         }
     }
 
-    /**
-     * Phase 3: Commit (Law)
-     */
+
+     // Phase 3: Commit (Law)
+
     private void runCommitPhase(List<String> targetPorts) throws InterruptedException {
         visualizer.setPhase("3 - Law (Commit)");
         visualizer.addLogMessage("PHASE", "Starting LAW phase (value commit)");
@@ -332,7 +325,6 @@ public class PaxosController {
                     break;
                 }
             } catch (Exception e) {
-                // Skip this server
                 continue;
             }
         }
@@ -425,24 +417,21 @@ public class PaxosController {
         return null;
     }
 
-    /**
-     * Sleep with animation to show process visually
-     */
+     // Sleep with animation to show process visually
+
     private void sleepWithAnimation(long millis) throws InterruptedException {
         Thread.sleep(millis);
     }
 
-    /**
-     * Stop the Paxos process
-     */
+
     public void stopPaxosProcess() {
         isRunning.set(false);
         cleanupChannels();
     }
 
-    /**
-     * Clean up all gRPC channels
-     */
+
+     // Clean up all gRPC channels
+
     private void cleanupChannels() {
         for (ManagedChannel channel : activeChannels) {
             try {

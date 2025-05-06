@@ -9,24 +9,21 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Main launcher for the Paxos system.
- * This class starts both the GUI and the required server processes.
- */
+
 public class PaxosLauncher {
     private static final int[] DEFAULT_PORTS = {50051, 50052, 50053};
     private static List<Process> serverProcesses = new ArrayList<>();
     private static boolean isShuttingDown = false;
 
     public static void main(String[] args) {
-        // Set better look and feel
+
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Show splash screen while starting servers
+
         JFrame splashFrame = showSplashScreen();
 
         // Start server processes
@@ -44,7 +41,6 @@ public class PaxosLauncher {
             e.printStackTrace();
         }
 
-        // Close splash screen
         splashFrame.dispose();
 
         // Launch the GUI
@@ -61,10 +57,7 @@ public class PaxosLauncher {
         });
     }
 
-    /**
-     * Shows a splash screen while servers are starting
-     * @return The splash frame for later disposal
-     */
+
     private static JFrame showSplashScreen() {
         JFrame splashFrame = new JFrame("Starting Paxos...");
         splashFrame.setUndecorated(true);
@@ -94,9 +87,8 @@ public class PaxosLauncher {
         return splashFrame;
     }
 
-    /**
-     * Starts a single server process on the specified port
-     */
+     // Starts a single server process on the specified port
+
     private static void startServerProcess(int port, CountDownLatch latch) {
         new Thread(() -> {
             try {
@@ -130,14 +122,14 @@ public class PaxosLauncher {
                             latch.countDown();
                         }
 
-                        // Break if we're shutting down
+                        // Break if shutting down
                         if (isShuttingDown) {
                             break;
                         }
                     }
                 }
 
-                // If we get here, the server has terminated
+                // the server has terminated
                 System.out.println("Server on port " + port + " has terminated.");
 
             } catch (IOException e) {
@@ -148,9 +140,9 @@ public class PaxosLauncher {
         }).start();
     }
 
-    /**
-     * Method to start additional servers for the 5-node mode
-     */
+
+     // Method to start additional servers for the 5-node mode
+
     public static void startAdditionalServers(int[] additionalPorts) {
         CountDownLatch additionalLatch = new CountDownLatch(additionalPorts.length);
 
@@ -168,9 +160,9 @@ public class PaxosLauncher {
         }
     }
 
-    /**
-     * Stops all server processes
-     */
+
+     // Stops all server processes
+
     private static void stopAllServers() {
         for (Process process : serverProcesses) {
             if (process.isAlive()) {

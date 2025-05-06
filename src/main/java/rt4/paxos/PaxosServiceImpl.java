@@ -157,7 +157,6 @@ public class PaxosServiceImpl extends PaxosServiceGrpc.PaxosServiceImplBase {
         logger.info("[" + eventType + "] " + description);
     }
 
-    // ✅ Renamed to avoid conflict with Protobuf LogEntry
     static class LocalLogEntry {
         private final String timestamp;
         private final String eventType;
