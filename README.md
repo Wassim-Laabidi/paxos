@@ -70,7 +70,7 @@ java -cp target/paxos-1.0-SNAPSHOT.jar rt4.paxos.PaxosProposer 50055
 2. Start the visualization interface:
 
 ```bash
-java -cp target/paxos-1.0-SNAPSHOT-jar-with-dependencies.jar rt4.paxos.gui.PaxosVisualizer
+java -cp target/paxos-1.0-SNAPSHOT.jar rt4.paxos.gui.PaxosVisualizer
 ```
 
 ## Using the Interface
