@@ -52,7 +52,7 @@ You can run the application in two ways:
 The launcher starts both the GUI and the required server processes:
 
 ```bash
-java -cp target/paxos-1.0-SNAPSHOT-jar-with-dependencies.jar rt4.paxos.PaxosLauncher
+java -cp target/paxos-1.0-SNAPSHOT.jar rt4.paxos.PaxosLauncher
 ```
 
 ### Option 2: Starting Components Separately
